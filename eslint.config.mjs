@@ -6,6 +6,7 @@ import typescriptEslint from "@typescript-eslint/eslint-plugin";
 import typescriptParser from "@typescript-eslint/parser";
 import prettierConfig from "eslint-config-prettier";
 import prettierPlugin from "eslint-plugin-prettier";
+import importPlugin from "eslint-plugin-import";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -33,6 +34,7 @@ const eslintConfig = [
     plugins: {
       "@typescript-eslint": typescriptEslint,
       prettier: prettierPlugin,
+      import: importPlugin,
     },
     rules: {
       // Prevent "any" usage
@@ -49,6 +51,39 @@ const eslintConfig = [
         "error",
         { prefer: "type-imports" },
       ],
+
+      // Import organization rules
+      "import/order": [
+        "error",
+        {
+          groups: [
+            "builtin",
+            "external",
+            "internal",
+            "parent",
+            "sibling",
+            "index",
+          ],
+          "newlines-between": "always",
+          alphabetize: {
+            order: "asc",
+            caseInsensitive: true,
+          },
+          pathGroups: [
+            {
+              pattern: "@/**",
+              group: "internal",
+              position: "before",
+            },
+          ],
+          pathGroupsExcludedImportTypes: ["builtin"],
+        },
+      ],
+      "import/no-duplicates": "error",
+      "import/no-unresolved": "off", // TypeScript handles this
+      "import/named": "off", // TypeScript handles this
+      "import/default": "off", // TypeScript handles this
+      "import/namespace": "off", // TypeScript handles this
 
       // Code quality rules
       "prefer-const": "error",
