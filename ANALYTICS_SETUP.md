@@ -1,249 +1,507 @@
-# PostHog Analytics Setup
+# PostHog Analytics Setup & Usage Guide
 
-This Next.js boilerplate includes a complete PostHog analytics integration with type-safe implementation and high code quality standards.
+This Next.js boilerplate includes a complete PostHog analytics integration with type-safe implementation. Follow this guide to implement analytics properly in your application.
 
-## 🚀 Quick Start
+## Quick Setup (5 Minutes)
 
-### 1. Environment Configuration
+### 1. Get PostHog Credentials
 
-Add the following environment variables to your `.env.local` file:
+1. Sign up at [posthog.com](https://posthog.com) (free tier available)
+2. Create a new project
+3. Copy your **Project API Key** (starts with `phc_`)
+
+### 2. Environment Configuration
+
+Add to your `.env.local` file:
 
 ```bash
-# PostHog Configuration
-NEXT_PUBLIC_POSTHOG_KEY=phc_your_project_key_here
+# PostHog Configuration (Required)
+NEXT_PUBLIC_POSTHOG_KEY=phc_your_actual_key_here
 NEXT_PUBLIC_POSTHOG_HOST=https://app.posthog.com
 NEXT_PUBLIC_ENABLE_ANALYTICS=true
 ```
 
-### 2. Get Your PostHog Key
-
-1. Sign up at [posthog.com](https://posthog.com)
-2. Create a new project
-3. Copy your project API key (starts with `phc_`)
-4. Add it to your environment variables
-
-### 3. Test the Integration
-
-1. Start your development server: `npm run dev`
-2. Visit `/analytics-demo` to see the interactive demo
-3. Check the PostHog dashboard to see events being tracked
-
-## 📁 File Structure
-
-```
-src/
-├── components/
-│   └── analytics/
-│       ├── index.ts                    # Export barrel
-│       ├── posthog-provider.tsx        # Main provider component
-│       └── posthog-page-view.tsx       # Page view tracking
-├── hooks/
-│   └── use-analytics.ts                # Analytics hook
-└── app/
-    ├── layout.tsx                      # Provider integration
-    └── analytics-demo/
-        └── page.tsx                    # Demo page
-```
-
-## 🎯 Usage Examples
-
-### Basic Event Tracking
-
-```tsx
-import { useAnalytics } from "@/hooks";
-
-function MyComponent() {
-  const { track } = useAnalytics();
-
-  const handleButtonClick = () => {
-    track("button_clicked", {
-      button_name: "hero_cta",
-      page: "homepage",
-      timestamp: new Date().toISOString(),
-    });
-  };
-
-  return <button onClick={handleButtonClick}>Click Me</button>;
-}
-```
-
-### User Identification
-
-```tsx
-import { useAnalytics } from "@/hooks";
-
-function LoginComponent() {
-  const { identify } = useAnalytics();
-
-  const handleLogin = (user) => {
-    identify(user.id, {
-      email: user.email,
-      name: user.name,
-      plan: user.plan,
-      signup_date: user.createdAt,
-    });
-  };
-
-  // ... rest of component
-}
-```
-
-### User Properties
-
-```tsx
-import { useAnalytics } from "@/hooks";
-
-function ProfileComponent() {
-  const { setUserProperties } = useAnalytics();
-
-  const handleProfileUpdate = (data) => {
-    setUserProperties({
-      last_profile_update: new Date().toISOString(),
-      preferences: data.preferences,
-      subscription_status: data.subscription,
-    });
-  };
-
-  // ... rest of component
-}
-```
-
-## 🔧 Configuration Options
-
-### PostHog Provider Options
-
-The PostHog provider is configured with the following default settings:
-
-```tsx
-{
-  api_host: env.NEXT_PUBLIC_POSTHOG_HOST,
-  capture_pageview: false,              // Manual control for better performance
-  capture_pageleave: true,              // Track page exits
-  disable_session_recording: false,     // Enable session recordings
-  enable_recording_console_log: false,  // Disable console log recording
-}
-```
-
-### Environment Variables
-
-| Variable                       | Required | Default                   | Description                  |
-| ------------------------------ | -------- | ------------------------- | ---------------------------- |
-| `NEXT_PUBLIC_POSTHOG_KEY`      | Yes      | -                         | Your PostHog project API key |
-| `NEXT_PUBLIC_POSTHOG_HOST`     | No       | `https://app.posthog.com` | PostHog instance URL         |
-| `NEXT_PUBLIC_ENABLE_ANALYTICS` | No       | `false`                   | Master switch for analytics  |
-
-## ✨ Features
-
-### Type Safety
-
-- **Full TypeScript support** with strict type checking
-- **Type-safe event properties** with custom interfaces
-- **IntelliSense support** for all analytics methods
-
-### Performance
-
-- **Lazy loading** with React Suspense
-- **Memoized callbacks** to prevent unnecessary re-renders
-- **Conditional initialization** to avoid unnecessary API calls
-
-### Code Quality
-
-- **ESLint compliance** with Next.js recommended rules
-- **Prettier formatting** for consistent code style
-- **Comprehensive JSDoc** documentation
-- **Error boundary protection** for graceful degradation
-
-### Privacy & Security
-
-- **Graceful degradation** when analytics is disabled
-- **Environment-based configuration** for different deployment stages
-- **Optional initialization** respects user privacy preferences
-
-## 🛠️ Development
-
-### Running Quality Checks
-
-The project includes comprehensive quality checks:
+### 3. Test Installation
 
 ```bash
-# Run all quality checks
-npm run quality:check
-
-# Individual checks
-npm run type-check    # TypeScript compilation
-npm run lint         # ESLint validation
-npm run format:check # Prettier formatting
+npm run dev
+# Visit http://localhost:3000
+# Check PostHog dashboard for "Page Viewed" events
 ```
 
-### Adding New Analytics Events
+## How to Use Analytics Properly
 
-1. **Define the event** in your component
-2. **Use descriptive names** for events and properties
-3. **Include relevant context** (page, user type, timestamp)
-4. **Test thoroughly** using the demo page
+### Import the Hook
 
-### Best Practices
+```tsx
+import { useAnalytics } from "@/hooks/use-analytics";
+```
 
-1. **Consistent Naming**: Use snake_case for event names and properties
-2. **Meaningful Events**: Track user actions, not technical events
-3. **Privacy First**: Avoid tracking PII without user consent
-4. **Performance**: Batch events when possible
-5. **Testing**: Always test analytics in development
+### 1. Basic Event Tracking
 
-## 🚦 Deployment
+Track user actions and interactions:
 
-### Production Checklist
+```tsx
+function HeroSection() {
+  const { track } = useAnalytics();
 
-- [ ] PostHog project created and configured
-- [ ] Environment variables set in production
-- [ ] Analytics enabled (`NEXT_PUBLIC_ENABLE_ANALYTICS=true`)
-- [ ] Event tracking tested and verified
-- [ ] Privacy policy updated (if required)
+  const handleCTAClick = () => {
+    track("cta_clicked", {
+      location: "hero_section",
+      button_text: "Get Started",
+      page: "homepage",
+    });
+  };
 
-### Monitoring
+  const handleVideoPlay = () => {
+    track("video_played", {
+      video_title: "Product Demo",
+      video_duration: 120,
+      autoplay: false,
+    });
+  };
 
-1. **PostHog Dashboard**: Monitor events and user behavior
-2. **Error Tracking**: Watch for analytics-related errors
-3. **Performance**: Monitor impact on app performance
+  return (
+    <section>
+      <button onClick={handleCTAClick}>Get Started</button>
+      <video onPlay={handleVideoPlay}>...</video>
+    </section>
+  );
+}
+```
 
-## 🔍 Troubleshooting
+### 2. User Authentication Tracking
 
-### Analytics Not Working
+Track user lifecycle events:
 
-1. **Check environment variables** are correctly set
-2. **Verify PostHog key** is valid and active
-3. **Ensure analytics is enabled** (`NEXT_PUBLIC_ENABLE_ANALYTICS=true`)
-4. **Check browser console** for any errors
+```tsx
+function AuthComponent() {
+  const { track, identify } = useAnalytics();
 
-### Events Not Appearing
+  const handleSignUp = async (userData) => {
+    // Track the signup event
+    track("user_signed_up", {
+      method: "email", // or "google", "github"
+      source: "header_cta",
+      timestamp: new Date().toISOString()
+    });
 
-1. **Wait a few minutes** for events to appear in PostHog
-2. **Check event names** for typos or formatting issues
-3. **Verify network connectivity** and ad blockers
-4. **Test with the demo page** to isolate issues
+    // Identify the user for future events
+    identify(userData.id, {
+      email: userData.email,
+      name: userData.name,
+      signup_date: userData.createdAt,
+      plan: "free"
+    });
+  };
 
-### TypeScript Errors
+  const handleSignIn = (userData) => {
+    track("user_signed_in", {
+      method: "email",
+      last_login: new Date().toISOString()
+    });
 
-1. **Check import paths** are correct
-2. **Verify type definitions** match the interfaces
-3. **Run type checking** with `npm run type-check`
-4. **Update dependencies** if using outdated versions
+    identify(userData.id, {
+      email: userData.email,
+      last_login: new Date().toISOString()
+    });
+  };
 
-## 📚 Resources
+  const handleSignOut = () => {
+    track("user_signed_out");
+    // Don't reset() here unless you want to clear the user session
+  };
 
-- [PostHog Documentation](https://posthog.com/docs)
-- [Next.js Analytics Best Practices](https://nextjs.org/docs/basic-features/measuring-performance)
-- [React Analytics Patterns](https://react.dev/learn/you-might-not-need-an-effect#sending-analytics)
+  return (
+    // Your auth component JSX
+  );
+}
+```
 
-## 🤝 Contributing
+### 3. E-commerce / Conversion Tracking
 
-When contributing analytics-related features:
+Track business-critical events:
 
-1. **Follow the existing patterns** and code style
-2. **Add comprehensive tests** for new functionality
-3. **Update documentation** for any API changes
-4. **Run quality checks** before submitting PRs
+```tsx
+function ProductPage({ product }) {
+  const { track } = useAnalytics();
 
-## 📄 License
+  const handleAddToCart = () => {
+    track("product_added_to_cart", {
+      product_id: product.id,
+      product_name: product.name,
+      product_price: product.price,
+      category: product.category,
+      quantity: 1
+    });
+  };
 
-This analytics implementation follows the same license as the main project.
+  const handlePurchase = (orderData) => {
+    track("purchase_completed", {
+      order_id: orderData.id,
+      total_amount: orderData.total,
+      currency: "USD",
+      items_count: orderData.items.length,
+      payment_method: orderData.paymentMethod
+    });
+  };
+
+  const handleProductView = () => {
+    track("product_viewed", {
+      product_id: product.id,
+      product_name: product.name,
+      product_price: product.price,
+      category: product.category
+    });
+  };
+
+  useEffect(() => {
+    handleProductView();
+  }, [product.id]);
+
+  return (
+    // Your product component JSX
+  );
+}
+```
+
+### 4. Form Tracking
+
+Track user engagement with forms:
+
+```tsx
+function ContactForm() {
+  const { track } = useAnalytics();
+  const [formStarted, setFormStarted] = useState(false);
+
+  const handleFormStart = () => {
+    if (!formStarted) {
+      track("form_started", {
+        form_name: "contact_form",
+        page: "contact",
+      });
+      setFormStarted(true);
+    }
+  };
+
+  const handleFormSubmit = (formData) => {
+    track("form_submitted", {
+      form_name: "contact_form",
+      form_type: formData.inquiry_type,
+      has_phone: Boolean(formData.phone),
+      page: "contact",
+    });
+  };
+
+  const handleFormError = (errors) => {
+    track("form_error", {
+      form_name: "contact_form",
+      error_fields: Object.keys(errors),
+      error_count: Object.keys(errors).length,
+    });
+  };
+
+  return (
+    <form onSubmit={handleFormSubmit}>
+      <input
+        onFocus={handleFormStart}
+        // ... other props
+      />
+      {/* Rest of form */}
+    </form>
+  );
+}
+```
+
+### 5. Feature Usage Tracking
+
+Track how users interact with your features:
+
+```tsx
+function Dashboard() {
+  const { track, setUserProperties } = useAnalytics();
+
+  const handleFeatureUsed = (featureName) => {
+    track("feature_used", {
+      feature_name: featureName,
+      timestamp: new Date().toISOString(),
+      page: "dashboard"
+    });
+
+    // Update user properties to show they've used this feature
+    setUserProperties({
+      [`last_used_${featureName}`]: new Date().toISOString(),
+      [`has_used_${featureName}`]: true
+    });
+  };
+
+  const handleSettingsOpen = () => {
+    handleFeatureUsed("settings");
+  };
+
+  const handleReportGenerated = (reportType) => {
+    track("report_generated", {
+      report_type: reportType,
+      timestamp: new Date().toISOString()
+    });
+    handleFeatureUsed("reports");
+  };
+
+  return (
+    // Your dashboard JSX
+  );
+}
+```
+
+## Best Practices
+
+### 1. Event Naming Convention
+
+Use **snake_case** and descriptive names:
+
+```tsx
+// ✅ Good
+track("checkout_completed");
+track("video_played");
+track("feature_toggled");
+
+// ❌ Avoid
+track("click");
+track("event1");
+track("userAction");
+```
+
+### 2. Property Standards
+
+Include context and meaningful data:
+
+```tsx
+// ✅ Good - Rich context
+track("button_clicked", {
+  button_text: "Subscribe Now",
+  location: "pricing_page_hero",
+  user_plan: "free",
+  timestamp: new Date().toISOString(),
+});
+
+// ❌ Poor - Minimal context
+track("click", { button: "subscribe" });
+```
+
+### 3. User Identification Pattern
+
+```tsx
+// ✅ Identify users early and update properties
+const { identify, setUserProperties } = useAnalytics();
+
+// On login/signup
+identify(user.id, {
+  email: user.email,
+  name: user.name,
+  plan: user.plan,
+  signup_date: user.createdAt,
+});
+
+// When user data changes
+setUserProperties({
+  plan: newPlan,
+  last_action: "upgraded_plan",
+});
+```
+
+### 4. Performance Considerations
+
+```tsx
+// ✅ Debounce rapid events
+const debouncedTrack = useCallback(
+  debounce((eventName, properties) => {
+    track(eventName, properties);
+  }, 500),
+  [track]
+);
+
+// ✅ Check if analytics is enabled
+const { track, isEnabled } = useAnalytics();
+
+if (isEnabled) {
+  track("expensive_calculation_started");
+}
+```
+
+## Real-World Examples
+
+### SaaS Dashboard Events
+
+```tsx
+const trackDashboardEvents = () => {
+  const { track } = useAnalytics();
+
+  return {
+    // Core actions
+    projectCreated: (project) =>
+      track("project_created", {
+        project_type: project.type,
+        template_used: project.template,
+        team_size: project.members.length,
+      }),
+
+    // Feature usage
+    exportData: (format) =>
+      track("data_exported", {
+        export_format: format,
+        data_size: "large", // or calculate actual size
+        feature: "export",
+      }),
+
+    // User engagement
+    helpOpened: (section) =>
+      track("help_opened", {
+        help_section: section,
+        user_plan: "premium",
+        page: "dashboard",
+      }),
+  };
+};
+```
+
+### E-commerce Events
+
+```tsx
+const trackEcommerceEvents = () => {
+  const { track } = useAnalytics();
+
+  return {
+    // Product interactions
+    productViewed: (product) =>
+      track("product_viewed", {
+        product_id: product.id,
+        product_name: product.name,
+        price: product.price,
+        category: product.category,
+        in_stock: product.stock > 0,
+      }),
+
+    // Cart actions
+    addedToCart: (product, quantity) =>
+      track("added_to_cart", {
+        product_id: product.id,
+        quantity: quantity,
+        cart_total: calculateCartTotal(),
+        currency: "USD",
+      }),
+
+    // Checkout process
+    checkoutStarted: (cart) =>
+      track("checkout_started", {
+        cart_value: cart.total,
+        items_count: cart.items.length,
+        currency: "USD",
+      }),
+  };
+};
+```
+
+## Development vs Production
+
+### Environment-Specific Tracking
+
+```tsx
+const { track, isEnabled } = useAnalytics();
+
+// Only track in production or staging
+if (process.env.NODE_ENV === "production" && isEnabled) {
+  track("feature_used", properties);
+}
+
+// Or use environment variable
+if (process.env.NEXT_PUBLIC_ENABLE_ANALYTICS === "true") {
+  track("debug_event", { env: process.env.NODE_ENV });
+}
+```
+
+## Testing Your Analytics
+
+### 1. Development Testing
+
+```bash
+# Start dev server
+npm run dev
+
+# Open browser console
+# Trigger events in your app
+# Check PostHog Live Events tab
+```
+
+### 2. Verify Events
+
+In PostHog dashboard:
+
+1. Go to **Live Events** tab
+2. Trigger actions in your app
+3. Confirm events appear with correct properties
+4. Check user identification is working
+
+### 3. Debug Common Issues
+
+```tsx
+function DebugAnalytics() {
+  const { isEnabled, track } = useAnalytics();
+
+  useEffect(() => {
+    console.log("Analytics enabled:", isEnabled);
+    console.log(
+      "PostHog key:",
+      process.env.NEXT_PUBLIC_POSTHOG_KEY?.substring(0, 10) + "..."
+    );
+
+    if (isEnabled) {
+      track("debug_page_loaded", {
+        timestamp: new Date().toISOString(),
+        user_agent: navigator.userAgent,
+      });
+    }
+  }, [isEnabled, track]);
+
+  return (
+    <div>
+      <p>Analytics Status: {isEnabled ? "Enabled" : "Disabled"}</p>
+      <button onClick={() => track("test_button_clicked")}>
+        Test Analytics
+      </button>
+    </div>
+  );
+}
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Events not showing up**
+   - Check environment variables are set correctly
+   - Verify PostHog key is valid
+   - Check browser console for errors
+   - Ensure ad blockers aren't blocking PostHog
+
+2. **TypeScript errors**
+   - Import types correctly: `import { useAnalytics } from "@/hooks/use-analytics"`
+   - Ensure properties match the interface types
+
+3. **Performance issues**
+   - Don't track too frequently (debounce if needed)
+   - Keep property objects small
+   - Use `isEnabled` check for expensive operations
+
+### Testing Commands
+
+```bash
+# Check if PostHog is loaded
+# In browser console:
+window.posthog !== undefined
+
+# Test event tracking
+# In browser console:
+window.posthog.capture('test_event', { test: true })
+```
+
+This setup provides comprehensive, type-safe analytics that helps you understand user behavior and improve your application based on real data.
