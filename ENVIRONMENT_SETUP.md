@@ -169,7 +169,7 @@ NEXT_PUBLIC_ENABLE_ERROR_REPORTING="true"
 
 ```typescript
 // Import the validated environment
-import { env } from "@/env.mjs";
+import { env } from "@/env";
 
 // Type-safe access to environment variables
 const apiUrl = env.NEXT_PUBLIC_API_BASE_URL; // ✅ Type-safe, validated

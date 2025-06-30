@@ -179,3 +179,5 @@ export default function Component({ title, children }) {
 ## 📝 License
 
 MIT License - see LICENSE file for details.
+
+# nextjs-boilerplate

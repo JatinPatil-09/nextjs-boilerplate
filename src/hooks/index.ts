@@ -36,5 +36,12 @@
 // export { useOnlineStatus } from "./use-online-status";
 // export { useGeolocation } from "./use-geolocation";
 
+// Analytics Hooks
+export { useAnalytics } from "./use-analytics";
+export type {
+  AnalyticsEventProperties,
+  AnalyticsUserProperties,
+  UseAnalyticsReturn,
+} from "./use-analytics";
+
 // Note: Uncomment and update exports as custom hooks are added
-export {};

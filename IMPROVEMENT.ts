@@ -617,7 +617,7 @@ export const IMPLEMENTATION_FLOW = {
         step: 5,
         task: "API Client & Data Fetching",
         actions: [
-          "Install @tanstack/react-query and axios",
+          "Install axios",
           "Create centralized API client with interceptors",
           "Setup request/response transformation layers",
           "Implement retry logic and error handling",
