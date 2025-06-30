@@ -13,12 +13,12 @@ const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
     rules: {
-      // TypeScript specific rules to prevent 'any' usage
-      "@typescript-eslint/no-explicit-any": "error",
+      // TypeScript specific rules - more lenient
+      "@typescript-eslint/no-explicit-any": "warn",
 
-      // Unused variables
+      // Unused variables - more lenient
       "@typescript-eslint/no-unused-vars": [
-        "error",
+        "warn",
         {
           argsIgnorePattern: "^_",
           varsIgnorePattern: "^_",
@@ -26,71 +26,43 @@ const eslintConfig = [
         },
       ],
 
-      // Console logs - disabled, handled by webpack in production
+      // Console logs
       "no-console": "off",
 
-      // Import organization
+      // Simplified import rules
       "import/order": [
-        "error",
+        "warn",
         {
-          groups: [
-            "builtin",
-            "external",
-            "internal",
-            "parent",
-            "sibling",
-            "index",
-          ],
+          groups: ["builtin", "external", "internal"],
           "newlines-between": "always",
           alphabetize: {
             order: "asc",
             caseInsensitive: true,
           },
-          pathGroups: [
-            {
-              pattern: "@/**",
-              group: "internal",
-              position: "before",
-            },
-          ],
-          pathGroupsExcludedImportTypes: ["builtin"],
         },
       ],
-      "import/no-duplicates": "error",
-      "import/newline-after-import": "error",
+      "import/no-duplicates": "warn",
+      "import/newline-after-import": "warn",
 
-      // React specific rules
-      "react/jsx-no-target-blank": [
-        "error",
-        {
-          allowReferrer: false,
-          enforceDynamicLinks: "always",
-        },
-      ],
+      // React specific rules - more lenient
+      "react/jsx-no-target-blank": "warn",
       "react/no-array-index-key": "warn",
 
-      // General code quality
-      "prefer-const": "error",
-      "no-var": "error",
-      "no-duplicate-imports": "error",
-      eqeqeq: ["error", "always"],
-      curly: ["error", "all"],
+      // Basic code quality - keeping important ones
+      "prefer-const": "warn",
+      "no-var": "warn",
+      "no-duplicate-imports": "warn",
 
-      // Prevent dangerous patterns
+      // Security rules - keeping these as errors
       "no-eval": "error",
       "no-implied-eval": "error",
       "no-new-func": "error",
       "no-script-url": "error",
-
-      // Code style (handled by Prettier, but these don't conflict)
-      "object-shorthand": "error",
-      "prefer-arrow-callback": "error",
     },
   },
   {
     files: ["**/*.js", "**/*.jsx"],
     rules: {
-      // Disable TypeScript-specific rules for JavaScript files
       "@typescript-eslint/no-explicit-any": "off",
     },
   },

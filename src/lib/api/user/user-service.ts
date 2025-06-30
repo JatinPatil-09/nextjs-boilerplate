@@ -19,7 +19,6 @@ import type { RequestConfig } from "@/types";
 import { AuthStrategyFactory } from "../auth/auth-strategies";
 import { BaseApiFactory } from "../core/api-factory";
 import type { ApiServiceConfig } from "../core/api-service-interface";
-
 import type {
   CreateUserData,
   UpdateUserData,

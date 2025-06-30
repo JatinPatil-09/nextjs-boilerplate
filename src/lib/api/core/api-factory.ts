@@ -9,7 +9,6 @@ import axios, {
 import type { HttpMethod, RequestConfig } from "@/types";
 
 import { NoAuthStrategy } from "../auth/auth-strategies";
-
 import type {
   ApiService,
   ApiServiceConfig,
