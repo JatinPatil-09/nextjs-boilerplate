@@ -1,0 +1,10 @@
+# Opengrep Security Reports
+# These contain scan results and should not be committed
+*.json
+*.sarif
+security-report.*
+scan-results.*
+
+# Temporary files
+*.tmp
+*.log 

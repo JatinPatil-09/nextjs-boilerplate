@@ -1,6 +1,16 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
+# Run security check first
+echo "Running security checks..."
+if ! ./scripts/security-check.sh; then
+    echo ""
+    echo "ERROR: Commit rejected due to security issues!"
+    echo "Fix the security issues above and try again."
+    echo ""
+    exit 1
+fi
+
 # Run lint-staged for staged files
 npx lint-staged
 

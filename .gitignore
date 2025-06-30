@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Opengrep Security Reports
+.opengrep/*.json
+.opengrep/*.sarif
+.opengrep/security-report.*
+.opengrep/scan-results.*

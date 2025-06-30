@@ -190,7 +190,7 @@ export default function HomePage(): React.JSX.Element {
             className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-6 py-3 text-white font-medium transition-all hover:bg-green-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
           >
             <span>📝</span>
-            Posts Demo
+            Posts
           </Link>
 
           {/* Development Tools Link */}

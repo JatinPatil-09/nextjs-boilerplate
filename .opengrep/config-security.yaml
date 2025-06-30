@@ -1,0 +1,144 @@
+rules:
+  # Rule 1: Direct process.env usage outside of allowed config files
+  - id: opengrep.direct-process-env
+    pattern-either:
+      - pattern: process.env.$ANYTHING
+    paths:
+      include:
+        - "**/*.ts"
+        - "**/*.tsx"
+        - "**/*.js"
+        - "**/*.jsx"
+      exclude:
+        - "**/env.ts"
+        - "**/config.ts"
+        - "**/instrumentation.ts"
+    message: "Direct process.env usage detected. Use @/env or @/lib/config instead"
+    languages:
+      - typescript
+      - javascript
+    severity: ERROR
+
+  # Rule 2: Hardcoded API keys and secrets (not env variables)
+  - id: opengrep.hardcoded-secrets
+    pattern-either:
+      # Hardcoded API keys (not using env variables)
+      - pattern: |
+          const $VAR = "sk_$ANYTHING"
+      - pattern: |
+          let $VAR = "sk_$ANYTHING"
+      - pattern: |
+          var $VAR = "sk_$ANYTHING"
+      - pattern: |
+          const $VAR = "pk_$ANYTHING"
+      - pattern: |
+          let $VAR = "pk_$ANYTHING"
+      - pattern: |
+          var $VAR = "pk_$ANYTHING"
+      # Hardcoded JWT secrets (not using env variables)
+      - pattern: |
+          const $VAR = "$SECRET"
+        where:
+          - pattern: |
+              "$SECRET"
+            regex: '^"[a-zA-Z0-9_-]{20,}"$'
+      # Hardcoded database connection strings
+      - pattern: |
+          const $VAR = "postgresql://$ANYTHING"
+      - pattern: |
+          const $VAR = "mysql://$ANYTHING"
+      - pattern: |
+          const $VAR = "mongodb://$ANYTHING"
+    message: "Hardcoded secret detected. Use environment variables instead"
+    languages:
+      - typescript
+      - javascript
+    severity: ERROR
+
+  # Rule 3: Hardcoded database URLs (not env variables)
+  - id: opengrep.hardcoded-database-url
+    pattern-either:
+      - pattern: |
+          const $VAR = "postgres://$ANYTHING"
+      - pattern: |
+          const $VAR = "postgresql://$ANYTHING"
+      - pattern: |
+          const $VAR = "mysql://$ANYTHING"
+      - pattern: |
+          const $VAR = "mongodb://$ANYTHING"
+      - pattern: |
+          let $VAR = "postgres://$ANYTHING"
+      - pattern: |
+          let $VAR = "postgresql://$ANYTHING"
+      - pattern: |
+          var $VAR = "postgres://$ANYTHING"
+      - pattern: |
+          var $VAR = "postgresql://$ANYTHING"
+    message: "Hardcoded database URL detected. Use environment variables"
+    languages:
+      - typescript
+      - javascript
+    severity: ERROR
+
+  # Rule 4: Console.log with potentially sensitive data
+  - id: opengrep.console-log-secrets
+    pattern-either:
+      - pattern: console.log($ANYTHING, $SECRET, $ANYTHING)
+        where:
+          - pattern: $SECRET
+            regex: "(secret|password|token|key|api)"
+      - pattern: console.log($SECRET)
+        where:
+          - pattern: $SECRET
+            regex: "(secret|password|token|key|api)"
+    message: "Avoid logging sensitive data with console.log"
+    languages:
+      - typescript
+      - javascript
+    severity: WARNING
+
+  # Rule 5: Server environment variables in client components
+  - id: opengrep.server-env-in-client
+    pattern-either:
+      - pattern: |
+          "use client"
+          ...
+          process.env.$VAR
+        where:
+          - pattern: $VAR
+            not-regex: "^NEXT_PUBLIC_"
+    message: "Server environment variable used in client component. Use NEXT_PUBLIC_ prefix or move to server component"
+    languages:
+      - typescript
+      - javascript
+    severity: ERROR
+
+  # Rule 6: Hardcoded JWT secrets in signing operations
+  - id: opengrep.hardcoded-jwt-secret
+    pattern-either:
+      - pattern: |
+          jwt.sign($PAYLOAD, "$SECRET")
+      - pattern: |
+          jwt.verify($TOKEN, "$SECRET")
+    message: "Hardcoded JWT secret detected. Use environment variables"
+    languages:
+      - typescript
+      - javascript
+    severity: ERROR
+
+  # Rule 7: Hardcoded Stripe keys
+  - id: opengrep.hardcoded-stripe-keys
+    pattern-either:
+      - pattern: |
+          const $VAR = "sk_live_$ANYTHING"
+      - pattern: |
+          const $VAR = "sk_test_$ANYTHING"
+      - pattern: |
+          let $VAR = "sk_live_$ANYTHING"
+      - pattern: |
+          let $VAR = "sk_test_$ANYTHING"
+    message: "Hardcoded Stripe secret key detected. Use environment variables"
+    languages:
+      - typescript
+      - javascript
+    severity: ERROR
