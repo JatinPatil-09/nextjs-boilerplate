@@ -1,0 +1,64 @@
+{
+  "Common": {
+    "loading": "Chargement...",
+    "error": "Une erreur s'est produite",
+    "save": "Sauvegarder",
+    "cancel": "Annuler",
+    "submit": "Soumettre",
+    "back": "Retour",
+    "next": "Suivant"
+  },
+  "Navigation": {
+    "home": "Accueil",
+    "about": "À propos",
+    "contact": "Contact",
+    "language": "Langue"
+  },
+  "LocaleSwitcher": {
+    "select_language": "Sélectionner la langue",
+    "english": "Anglais",
+    "french": "Français",
+    "spanish": "Espagnol"
+  },
+  "HomePage": {
+    "title": "Modèle Next.js",
+    "subtitle": "Un modèle Next.js complet avec configuration TypeScript stricte, gestion d'erreurs, linting, formatage et contrôles qualité.",
+    "features_title": "Fonctionnalités incluses",
+    "features": {
+      "typescript_strict": {
+        "title": "TypeScript Mode Strict",
+        "description": "Aucun type \"any\" autorisé"
+      },
+      "environment_variables": {
+        "title": "Variables d'environnement",
+        "description": "Configuration type-safe"
+      },
+      "precommit_hooks": {
+        "title": "Hooks de pré-commit",
+        "description": "Contrôles qualité avant push"
+      },
+      "error_handling": {
+        "title": "Gestion d'erreurs",
+        "description": "Frontières d'erreur Next.js"
+      },
+      "analytics": {
+        "title": "Analytiques",
+        "description": "Intégration PostHog activée"
+      },
+      "payments": {
+        "title": "Paiements",
+        "description": "Intégration Stripe prête"
+      }
+    },
+    "status": {
+      "development_mode": "Mode Développement",
+      "api_base_url": "URL de base API : {url}",
+      "maintenance_mode": "Mode Maintenance",
+      "maintenance_description": "L'application est actuellement en maintenance."
+    },
+    "navigation": {
+      "posts": "Articles",
+      "dev_tools": "Outils de Développement"
+    }
+  }
+}

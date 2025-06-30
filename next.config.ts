@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
 
 // Import environment validation at build time
 import "./src/env";
+
+const withNextIntl = createNextIntlPlugin("./src/lib/I18n.ts");
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -10,4 +13,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

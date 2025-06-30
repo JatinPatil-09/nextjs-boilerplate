@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { PostHogProvider } from "@/components/analytics";
+import type { Locale } from "@/types/i18n";
+import { AppConfig } from "@/utils/AppConfig";
 import "./globals.css";
 
 /**
@@ -68,6 +70,9 @@ export const metadata: Metadata = {
  */
 interface RootLayoutProps {
   readonly children: React.ReactNode;
+  readonly params?: Promise<{
+    locale?: string;
+  }>;
 }
 
 /**
@@ -76,18 +81,31 @@ interface RootLayoutProps {
  * This is the root layout that wraps all pages in the application.
  * It includes:
  * - Font variables for the entire app
- * - Basic HTML structure
+ * - Basic HTML structure with proper locale
  * - Global CSS imports
  *
  * Error boundaries are handled by:
  * - global-error.tsx (for layout errors)
  * - error.tsx (for page errors)
  */
-export default function RootLayout({
+export default async function RootLayout({
   children,
-}: RootLayoutProps): React.JSX.Element {
+  params,
+}: RootLayoutProps): Promise<React.JSX.Element> {
+  // Get the locale from params, fallback to default
+  let locale: Locale = AppConfig.defaultLocale;
+  if (params) {
+    const resolvedParams = await params;
+    if (
+      resolvedParams.locale &&
+      AppConfig.locales.includes(resolvedParams.locale as Locale)
+    ) {
+      locale = resolvedParams.locale as Locale;
+    }
+  }
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <head />
       <body
         className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-white font-sans antialiased`}

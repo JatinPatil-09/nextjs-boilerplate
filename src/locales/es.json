@@ -1,0 +1,64 @@
+{
+  "Common": {
+    "loading": "Cargando...",
+    "error": "Ocurrió un error",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "submit": "Enviar",
+    "back": "Atrás",
+    "next": "Siguiente"
+  },
+  "Navigation": {
+    "home": "Inicio",
+    "about": "Acerca de",
+    "contact": "Contacto",
+    "language": "Idioma"
+  },
+  "LocaleSwitcher": {
+    "select_language": "Seleccionar idioma",
+    "english": "Inglés",
+    "french": "Francés",
+    "spanish": "Español"
+  },
+  "HomePage": {
+    "title": "Plantilla Next.js",
+    "subtitle": "Una plantilla Next.js completa con configuración TypeScript estricta, manejo de errores, linting, formateo y controles de calidad.",
+    "features_title": "Características incluidas",
+    "features": {
+      "typescript_strict": {
+        "title": "TypeScript Modo Estricto",
+        "description": "No se permiten tipos \"any\""
+      },
+      "environment_variables": {
+        "title": "Variables de Entorno",
+        "description": "Configuración type-safe"
+      },
+      "precommit_hooks": {
+        "title": "Hooks de Pre-commit",
+        "description": "Controles de calidad antes del push"
+      },
+      "error_handling": {
+        "title": "Manejo de Errores",
+        "description": "Límites de error de Next.js"
+      },
+      "analytics": {
+        "title": "Analíticas",
+        "description": "Integración PostHog habilitada"
+      },
+      "payments": {
+        "title": "Pagos",
+        "description": "Integración Stripe lista"
+      }
+    },
+    "status": {
+      "development_mode": "Modo Desarrollo",
+      "api_base_url": "URL base API: {url}",
+      "maintenance_mode": "Modo Mantenimiento",
+      "maintenance_description": "La aplicación está actualmente en mantenimiento."
+    },
+    "navigation": {
+      "posts": "Publicaciones",
+      "dev_tools": "Herramientas de Desarrollo"
+    }
+  }
+}

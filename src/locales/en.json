@@ -1,0 +1,64 @@
+{
+  "Common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "save": "Save",
+    "cancel": "Cancel",
+    "submit": "Submit",
+    "back": "Back",
+    "next": "Next"
+  },
+  "Navigation": {
+    "home": "Home",
+    "about": "About",
+    "contact": "Contact",
+    "language": "Language"
+  },
+  "LocaleSwitcher": {
+    "select_language": "Select Language",
+    "english": "English",
+    "french": "French",
+    "spanish": "Spanish"
+  },
+  "HomePage": {
+    "title": "Next.js Boilerplate",
+    "subtitle": "A comprehensive Next.js boilerplate with strict TypeScript configuration, error handling, linting, formatting, and quality checks.",
+    "features_title": "Included Features",
+    "features": {
+      "typescript_strict": {
+        "title": "TypeScript Strict Mode",
+        "description": "No \"any\" types allowed"
+      },
+      "environment_variables": {
+        "title": "Environment Variables",
+        "description": "Type-safe configuration"
+      },
+      "precommit_hooks": {
+        "title": "Pre-commit Hooks",
+        "description": "Quality checks before push"
+      },
+      "error_handling": {
+        "title": "Error Handling",
+        "description": "Next.js error boundaries"
+      },
+      "analytics": {
+        "title": "Analytics",
+        "description": "PostHog integration enabled"
+      },
+      "payments": {
+        "title": "Payments",
+        "description": "Stripe integration ready"
+      }
+    },
+    "status": {
+      "development_mode": "Development Mode",
+      "api_base_url": "API Base URL: {url}",
+      "maintenance_mode": "Maintenance Mode",
+      "maintenance_description": "The application is currently under maintenance."
+    },
+    "navigation": {
+      "posts": "Posts",
+      "dev_tools": "Development Tools"
+    }
+  }
+}
