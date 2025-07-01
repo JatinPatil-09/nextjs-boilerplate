@@ -318,7 +318,7 @@ export function MultiSelect(props: MultiSelectComponentProps) {
   };
 
   const renderGroupedOptions = () => {
-    return options.map((item, index) => {
+    return options.map((item) => {
       if ("options" in item) {
         const group = item as SelectOptionGroup;
         const filteredGroupOptions = group.options.filter((option) =>
@@ -328,7 +328,7 @@ export function MultiSelect(props: MultiSelectComponentProps) {
         if (filteredGroupOptions.length === 0) return null;
 
         return (
-          <div key={index}>
+          <div key={`group-${group.label}`}>
             <div className={cssClasses.groupLabel}>{group.label}</div>
             {filteredGroupOptions.map(renderOption)}
           </div>
