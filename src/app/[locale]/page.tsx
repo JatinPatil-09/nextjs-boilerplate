@@ -201,6 +201,15 @@ function HomepageContent() {
             {t("navigation.posts")}
           </Link>
 
+          {/* Form Demo Link */}
+          <Link
+            href="/form"
+            className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-6 py-3 text-white font-medium transition-all hover:bg-indigo-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          >
+            <span>📝</span>
+            {t("navigation.form")}
+          </Link>
+
           {/* Development Tools Link */}
           {config.app.isDevelopment && (
             <Link

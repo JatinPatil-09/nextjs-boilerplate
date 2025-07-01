@@ -58,7 +58,8 @@
     },
     "navigation": {
       "posts": "Posts",
-      "dev_tools": "Development Tools"
+      "dev_tools": "Development Tools",
+      "form": "Form Demo"
     }
   }
 }

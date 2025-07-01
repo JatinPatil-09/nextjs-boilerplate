@@ -58,7 +58,8 @@
     },
     "navigation": {
       "posts": "Publicaciones",
-      "dev_tools": "Herramientas de Desarrollo"
+      "dev_tools": "Herramientas de Desarrollo",
+      "form": "Demostración de Formulario"
     }
   }
 }
