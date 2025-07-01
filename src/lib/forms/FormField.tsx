@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import React, { useEffect } from "react";
 import { FieldValues, RegisterOptions, useFormContext } from "react-hook-form";
 

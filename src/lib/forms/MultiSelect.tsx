@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import React, { useEffect, useRef, useState } from "react";
 import { useFormContext } from "react-hook-form";
 
