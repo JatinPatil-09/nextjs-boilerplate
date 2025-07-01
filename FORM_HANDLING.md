@@ -1,217 +1,666 @@
-# Form Handling in Next.js Boilerplate
+# Form Handling Library Documentation
 
-This guide outlines our form handling approach using React Hook Form, Zod, and TypeScript to create type-safe, accessible, and developer-friendly forms.
+A comprehensive, type-safe form handling library built with React Hook Form, Zod validation, and TypeScript. This library provides reusable components and utilities for building forms with consistent styling, validation, and user experience.
 
-## Core Libraries
+## Table of Contents
 
-- **react-hook-form**: Form state management with minimal re-renders
-- **zod**: TypeScript-first schema validation
-- **@hookform/resolvers/zod**: Integration between React Hook Form and Zod
+- [Getting Started](#getting-started)
+- [Basic Usage](#basic-usage)
+- [Form Components](#form-components)
+- [Field Types](#field-types)
+- [Validation](#validation)
+- [Advanced Features](#advanced-features)
+- [Best Practices](#best-practices)
+- [Examples](#examples)
+- [API Reference](#api-reference)
+
+---
 
 ## Getting Started
 
-### 1. Basic Form Setup
+### Installation
 
-```tsx
-// src/components/forms/FormWrapper.tsx
-import { ReactNode } from "react";
-import {
-  useForm,
-  FormProvider,
-  UseFormProps,
-  FieldValues,
-} from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+The form library is already included in this project. You can import components and utilities like this:
 
-interface FormWrapperProps<T extends FieldValues> {
-  schema: z.ZodType<T>;
-  onSubmit: (data: T) => void | Promise<void>;
-  children: ReactNode;
-  options?: Omit<UseFormProps<T>, "resolver">;
-  className?: string;
-}
-
-export function FormWrapper<T extends FieldValues>({
-  schema,
-  onSubmit,
-  children,
-  options,
-  className,
-}: FormWrapperProps<T>) {
-  const methods = useForm<T>({
-    resolver: zodResolver(schema),
-    mode: "onBlur",
-    ...options,
-  });
-
-  return (
-    <FormProvider {...methods}>
-      <form
-        onSubmit={methods.handleSubmit(onSubmit)}
-        className={className}
-        noValidate
-      >
-        {children}
-      </form>
-    </FormProvider>
-  );
-}
+```typescript
+import { FormWrapper, FormField, buildClasses } from "@/lib/forms";
+import { demoFormSchema, FORM_STYLES, COUNTRIES } from "@/constants";
 ```
 
-### 2. Create a Reusable Form Field Component
+### Core Concepts
 
-```tsx
-// src/components/forms/FormField.tsx
-import { useFormContext, FieldPath, FieldValues } from "react-hook-form";
+1. **FormWrapper**: The main container that handles form state, validation, and submission
+2. **FormField**: Individual form fields with built-in validation and styling
+3. **Zod Schema**: Defines validation rules and TypeScript types
+4. **Constants**: Reusable options, styles, and configuration
 
-interface FormFieldProps<T extends FieldValues> {
-  name: FieldPath<T>;
-  label: string;
-  type?: string;
-  placeholder?: string;
-  required?: boolean;
-}
+---
 
-export function FormField<T extends FieldValues>({
-  name,
-  label,
-  type = "text",
-  placeholder,
-  required = false,
-}: FormFieldProps<T>) {
-  const {
-    register,
-    formState: { errors },
-  } = useFormContext<T>();
+## Basic Usage
 
-  const error = errors[name];
-  const errorMessage = error?.message as string | undefined;
+### 1. Create a Validation Schema
+
+First, define your form structure using Zod:
+
+```typescript
+import { z } from "zod";
+
+const userSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Invalid email address"),
+  age: z.number().min(18, "Must be 18 or older"),
+});
+
+type UserFormData = z.infer<typeof userSchema>;
+```
+
+### 2. Create Your Form Component
+
+```typescript
+"use client";
+
+import { useState } from "react";
+import { FormWrapper, FormField } from "@/lib/forms";
+import { FORM_STYLES } from "@/constants";
+
+export default function UserForm() {
+  const [submissionCount, setSubmissionCount] = useState(0);
+
+  const handleSubmit = async (data: UserFormData) => {
+    console.log("Form data:", data);
+    // API call here
+    setSubmissionCount(prev => prev + 1);
+  };
 
   return (
-    <div className="form-field">
-      <label htmlFor={name}>
-        {label}
-        {required && <span className="required">*</span>}
-      </label>
+    <div className="max-w-md mx-auto p-6">
+      <FormWrapper
+        schema={userSchema}
+        onSubmit={handleSubmit}
+        formClassName={FORM_STYLES.CONTAINER}
+      >
+        <FormField<UserFormData>
+          name="name"
+          label="Full Name"
+          placeholder="Enter your name"
+          required
+          containerClassName={FORM_STYLES.FIELD_CONTAINER}
+          labelClassName={FORM_STYLES.LABEL}
+          inputClassName={FORM_STYLES.INPUT_BASE}
+          errorClassName={FORM_STYLES.ERROR_TEXT}
+        />
 
-      <input
-        id={name}
-        type={type}
-        placeholder={placeholder}
-        aria-invalid={!!error}
-        aria-describedby={errorMessage ? `${name}-error` : undefined}
-        {...register(name)}
-      />
+        <FormField<UserFormData>
+          name="email"
+          label="Email"
+          type="email"
+          placeholder="user@example.com"
+          required
+          containerClassName={FORM_STYLES.FIELD_CONTAINER}
+          labelClassName={FORM_STYLES.LABEL}
+          inputClassName={FORM_STYLES.INPUT_BASE}
+          errorClassName={FORM_STYLES.ERROR_TEXT}
+        />
 
-      {errorMessage && (
-        <p id={`${name}-error`} className="error-message">
-          {errorMessage}
-        </p>
-      )}
+        <FormField<UserFormData>
+          name="age"
+          label="Age"
+          type="number"
+          required
+          containerClassName={FORM_STYLES.FIELD_CONTAINER}
+          labelClassName={FORM_STYLES.LABEL}
+          inputClassName={FORM_STYLES.INPUT_BASE}
+          errorClassName={FORM_STYLES.ERROR_TEXT}
+          transform={(value) => parseInt(value as string)}
+        />
+
+        <button
+          type="submit"
+          className={FORM_STYLES.BUTTON_PRIMARY}
+        >
+          Submit
+        </button>
+      </FormWrapper>
     </div>
   );
 }
 ```
 
-## Form Schema Definition
+---
 
-Use Zod to define your form schemas:
+## Form Components
 
-```tsx
-// src/schemas/userSchema.ts
-import { z } from "zod";
+### FormWrapper
 
-export const userFormSchema = z
-  .object({
-    name: z.string().min(2, "Name must be at least 2 characters"),
-    email: z.string().email("Invalid email address"),
-    password: z.string().min(8, "Password must be at least 8 characters"),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  });
+The main form container that manages form state, validation, and submission.
 
-export type UserFormData = z.infer<typeof userFormSchema>;
+#### Basic Props
+
+```typescript
+interface FormWrapperProps<T> {
+  schema: z.ZodType<T>; // Zod validation schema
+  onSubmit: (data: T) => void; // Submit handler
+  children: ReactNode; // Form fields
+
+  // Optional configuration
+  options?: UseFormProps<T>; // React Hook Form options
+  validationConfig?: {
+    mode?: "onBlur" | "onChange" | "onSubmit" | "onTouched";
+    reValidateMode?: "onBlur" | "onChange" | "onSubmit";
+  };
+
+  // Event handlers
+  onError?: (error: unknown) => void;
+  onSuccess?: () => void;
+
+  // Custom components
+  loadingComponent?: ReactNode;
+  errorComponent?: ReactNode;
+  successComponent?: ReactNode;
+}
 ```
 
-## Complete Form Example
+#### Example with All Options
 
-```tsx
-// src/components/forms/UserRegistrationForm.tsx
-import { FormWrapper } from "./FormWrapper";
-import { FormField } from "./FormField";
-import { userFormSchema, UserFormData } from "../../schemas/userSchema";
+```typescript
+<FormWrapper
+  schema={userSchema}
+  onSubmit={handleSubmit}
+  onError={(error) => console.error(error)}
+  onSuccess={() => alert("Success!")}
+  validationConfig={{
+    mode: "onTouched",
+    reValidateMode: "onChange"
+  }}
+  options={{
+    defaultValues: { name: "", email: "", age: 18 }
+  }}
+  loadingComponent={<div>Saving...</div>}
+  successComponent={<div>Form saved successfully!</div>}
+>
+  {/* Your form fields here */}
+</FormWrapper>
+```
 
-interface UserRegistrationFormProps {
-  onSubmit: (data: UserFormData) => Promise<void>;
+### FormField
+
+Individual form fields with built-in validation and styling.
+
+#### Basic Props
+
+```typescript
+interface FormFieldProps<T> {
+  name: string; // Field name (must match schema)
+  label: string; // Field label
+  type?: string; // Input type (text, email, password, etc.)
+  placeholder?: string; // Placeholder text
+  required?: boolean; // Whether field is required
+  disabled?: boolean; // Whether field is disabled
+
+  // Styling
+  containerClassName?: string;
+  labelClassName?: string;
+  inputClassName?: string;
+  errorClassName?: string;
+  helperTextClassName?: string;
+
+  // Content
+  helperText?: string; // Help text below field
+  leftAdornment?: ReactNode; // Icon/text on left
+  rightAdornment?: ReactNode; // Icon/text on right
+
+  // Custom components
+  customInput?: ReactNode; // Custom input component
+  customLabel?: ReactNode; // Custom label component
+
+  // Validation & transformation
+  transform?: (value: any) => any; // Transform value before validation
+  validate?: (value: any) => boolean | string;
+
+  // Events
+  onValueChange?: (value: any) => void;
+  onFocus?: () => void;
+  onBlur?: () => void;
+}
+```
+
+---
+
+## Field Types
+
+### Standard Input Fields
+
+```typescript
+// Text input
+<FormField<T>
+  name="firstName"
+  label="First Name"
+  type="text"
+  placeholder="Enter first name"
+/>
+
+// Email input
+<FormField<T>
+  name="email"
+  label="Email"
+  type="email"
+  placeholder="user@example.com"
+/>
+
+// Password input
+<FormField<T>
+  name="password"
+  label="Password"
+  type="password"
+  placeholder="Enter password"
+/>
+
+// Number input
+<FormField<T>
+  name="age"
+  label="Age"
+  type="number"
+  transform={(value) => parseInt(value as string)}
+/>
+
+// Date input
+<FormField<T>
+  name="birthDate"
+  label="Birth Date"
+  type="date"
+/>
+
+// File input
+<FormField<T>
+  name="avatar"
+  label="Profile Picture"
+  type="file"
+  inputProps={{ accept: "image/*" }}
+  transform={(files) => (files as FileList)?.[0]}
+/>
+```
+
+### Checkbox and Radio
+
+```typescript
+// Checkbox
+<FormField<T>
+  name="newsletter"
+  label="Subscribe to newsletter"
+  type="checkbox"
+  containerClassName="flex items-center space-x-2"
+/>
+
+// Radio (requires custom component)
+<FormField<T>
+  name="experience"
+  label="Experience Level"
+  customInput={
+    <RadioGroup
+      name="experience"
+      options={[
+        { value: "junior", label: "Junior" },
+        { value: "senior", label: "Senior" }
+      ]}
+    />
+  }
+/>
+```
+
+### Select Dropdown
+
+```typescript
+<FormField<T>
+  name="country"
+  label="Country"
+  customInput={
+    <Select
+      name="country"
+      options={[
+        { value: "us", label: "United States" },
+        { value: "ca", label: "Canada" }
+      ]}
+      placeholder="Select country"
+    />
+  }
+/>
+```
+
+### Textarea
+
+```typescript
+<FormField<T>
+  name="bio"
+  label="Bio"
+  customInput={
+    <Textarea
+      name="bio"
+      placeholder="Tell us about yourself..."
+      rows={4}
+    />
+  }
+/>
+```
+
+### Multi-Select
+
+```typescript
+<FormField<T>
+  name="skills"
+  label="Skills"
+  isMultiSelect
+  options={[
+    { value: "js", label: "JavaScript" },
+    { value: "ts", label: "TypeScript" },
+    { value: "react", label: "React" }
+  ]}
+  placeholder="Select skills..."
+  searchable
+  clearable
+  maxSelections={5}
+/>
+```
+
+---
+
+## Validation
+
+### Schema-Level Validation
+
+Define validation rules in your Zod schema:
+
+```typescript
+const schema = z
+  .object({
+    email: z.string().email("Invalid email"),
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(
+        /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)/,
+        "Password must contain uppercase, lowercase, and number"
+      ),
+    confirmPassword: z.string(),
+    age: z.number().min(18, "Must be 18+").max(100, "Invalid age"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
+```
+
+### Field-Level Validation
+
+Add custom validation to specific fields:
+
+```typescript
+<FormField<T>
+  name="username"
+  label="Username"
+  validate={async (value) => {
+    if (!value) return true;
+    const isAvailable = await checkUsernameAvailability(value);
+    return isAvailable || "Username is not available";
+  }}
+/>
+```
+
+### Async Validation
+
+```typescript
+const validateEmail = async (email: string) => {
+  const response = await fetch(`/api/check-email?email=${email}`);
+  const data = await response.json();
+  return data.available || "Email is already taken";
+};
+
+<FormField<T>
+  name="email"
+  label="Email"
+  validate={validateEmail}
+/>
+```
+
+---
+
+## Advanced Features
+
+### Custom Input Components
+
+Create reusable custom inputs:
+
+```typescript
+function CustomDatePicker({ name }: { name: string }) {
+  const { register } = useFormContext();
+
+  return (
+    <input
+      type="date"
+      className="custom-date-picker"
+      {...register(name)}
+    />
+  );
 }
 
-export function UserRegistrationForm({ onSubmit }: UserRegistrationFormProps) {
+// Usage
+<FormField<T>
+  name="birthDate"
+  label="Birth Date"
+  customInput={<CustomDatePicker name="birthDate" />}
+/>
+```
+
+### Multi-Step Forms
+
+```typescript
+function MultiStepForm() {
+  const [step, setStep] = useState(1);
+
   return (
-    <FormWrapper
-      schema={userFormSchema}
-      onSubmit={onSubmit}
-      className="user-registration-form"
-    >
-      <FormField<UserFormData> name="name" label="Full Name" required />
+    <FormWrapper schema={schema} onSubmit={handleSubmit}>
+      {step === 1 && (
+        <div>
+          <FormField name="firstName" label="First Name" />
+          <FormField name="lastName" label="Last Name" />
+          <button onClick={() => setStep(2)}>Next</button>
+        </div>
+      )}
 
-      <FormField<UserFormData>
-        name="email"
-        label="Email Address"
-        type="email"
-        required
-      />
-
-      <FormField<UserFormData>
-        name="password"
-        label="Password"
-        type="password"
-        required
-      />
-
-      <FormField<UserFormData>
-        name="confirmPassword"
-        label="Confirm Password"
-        type="password"
-        required
-      />
-
-      <button type="submit">Register</button>
+      {step === 2 && (
+        <div>
+          <FormField name="email" label="Email" />
+          <FormField name="phone" label="Phone" />
+          <button onClick={() => setStep(1)}>Back</button>
+          <button type="submit">Submit</button>
+        </div>
+      )}
     </FormWrapper>
   );
 }
 ```
 
-## Using the Form
+### Dynamic Fields
 
-```tsx
-// src/app/register/page.tsx
+```typescript
+function DynamicForm() {
+  const [skills, setSkills] = useState([""]);
+
+  const addSkill = () => setSkills([...skills, ""]);
+  const removeSkill = (index: number) => {
+    setSkills(skills.filter((_, i) => i !== index));
+  };
+
+  return (
+    <FormWrapper schema={schema} onSubmit={handleSubmit}>
+      {skills.map((_, index) => (
+        <div key={index} className="flex items-center gap-2">
+          <FormField
+            name={`skills.${index}`}
+            label={`Skill ${index + 1}`}
+          />
+          <button onClick={() => removeSkill(index)}>Remove</button>
+        </div>
+      ))}
+      <button onClick={addSkill}>Add Skill</button>
+    </FormWrapper>
+  );
+}
+```
+
+### Conditional Fields
+
+```typescript
+function ConditionalForm() {
+  const { watch } = useFormContext();
+  const hasLicense = watch("hasLicense");
+
+  return (
+    <>
+      <FormField
+        name="hasLicense"
+        label="Do you have a driver's license?"
+        type="checkbox"
+      />
+
+      {hasLicense && (
+        <FormField
+          name="licenseNumber"
+          label="License Number"
+          required
+        />
+      )}
+    </>
+  );
+}
+```
+
+---
+
+## Best Practices
+
+### 1. Organize Constants
+
+Keep form options and styles in constants files:
+
+```typescript
+// constants/form-options.ts
+export const COUNTRIES = [
+  { value: "us", label: "United States" },
+  { value: "ca", label: "Canada" },
+];
+
+export const FORM_DEFAULT_VALUES = {
+  firstName: "",
+  email: "",
+  country: "",
+  skills: [],
+};
+```
+
+### 2. Use TypeScript Generics
+
+Always specify the form data type:
+
+```typescript
+<FormField<UserFormData>
+  name="email"  // TypeScript will validate this exists in UserFormData
+  label="Email"
+/>
+```
+
+### 3. Consistent Styling
+
+Use style constants for consistency:
+
+```typescript
+import { FORM_STYLES } from "@/constants";
+
+<FormField
+  name="email"
+  label="Email"
+  containerClassName={FORM_STYLES.FIELD_CONTAINER}
+  labelClassName={FORM_STYLES.LABEL}
+  inputClassName={FORM_STYLES.INPUT_BASE}
+  errorClassName={FORM_STYLES.ERROR_TEXT}
+/>
+```
+
+### 4. Form State Management
+
+Handle form state changes:
+
+```typescript
+<FormWrapper
+  schema={schema}
+  onSubmit={handleSubmit}
+  onFormStateChange={(state) => {
+    console.log("Form is valid:", state.isValid);
+    console.log("Form is dirty:", state.isDirty);
+  }}
+/>
+```
+
+### 5. Error Handling
+
+Provide meaningful error messages:
+
+```typescript
+const handleError = (error: unknown) => {
+  if (error instanceof Error) {
+    toast.error(error.message);
+  } else {
+    toast.error("Something went wrong");
+  }
+};
+
+<FormWrapper
+  schema={schema}
+  onSubmit={handleSubmit}
+  onError={handleError}
+/>
+```
+
+---
+
+## Examples
+
+### Complete Registration Form
+
+```typescript
 "use client";
 
-import { UserRegistrationForm } from "../../components/forms/UserRegistrationForm";
-import { UserFormData } from "../../schemas/userSchema";
 import { useState } from "react";
+import { z } from "zod";
+import { FormWrapper, FormField } from "@/lib/forms";
+import { FORM_STYLES, COUNTRIES } from "@/constants";
 
-export default function RegisterPage() {
+const registrationSchema = z.object({
+  firstName: z.string().min(2, "First name required"),
+  lastName: z.string().min(2, "Last name required"),
+  email: z.string().email("Invalid email"),
+  password: z.string().min(8, "Password must be 8+ characters"),
+  country: z.string().min(1, "Please select a country"),
+  agreeToTerms: z.boolean().refine(val => val, "Must agree to terms")
+});
+
+type RegistrationData = z.infer<typeof registrationSchema>;
+
+export default function RegistrationForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (data: UserFormData) => {
+  const handleSubmit = async (data: RegistrationData) => {
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
-      // API call to register user
-      await fetch("/api/auth/register", {
+      const response = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(data)
       });
 
-      // Handle successful registration
-      // e.g., redirect, show success message, etc.
+      if (response.ok) {
+        alert("Registration successful!");
+      }
     } catch (error) {
-      // Handle errors
       console.error("Registration failed:", error);
     } finally {
       setIsSubmitting(false);
@@ -219,920 +668,207 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="register-page">
-      <h1>Create an Account</h1>
-      <UserRegistrationForm onSubmit={handleSubmit} />
+    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow">
+      <h1 className="text-2xl font-bold mb-6">Create Account</h1>
 
-      {isSubmitting && <p>Submitting...</p>}
-    </div>
-  );
-}
-```
-
-## Advanced Features
-
-### 1. Handling Form Arrays
-
-For dynamic form arrays (e.g., adding multiple items):
-
-```tsx
-// FormArray.tsx example
-import { useFieldArray, useFormContext } from "react-hook-form";
-
-export function ExperienceFieldArray() {
-  const { control } = useFormContext();
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: "experiences",
-  });
-
-  return (
-    <div>
-      <h3>Work Experience</h3>
-
-      {fields.map((field, index) => (
-        <div key={field.id} className="experience-item">
-          <FormField
-            name={`experiences.${index}.company`}
-            label="Company"
-            required
-          />
-
-          <FormField
-            name={`experiences.${index}.position`}
-            label="Position"
-            required
-          />
-
-          <button type="button" onClick={() => remove(index)}>
-            Remove
-          </button>
-        </div>
-      ))}
-
-      <button
-        type="button"
-        onClick={() => append({ company: "", position: "" })}
-      >
-        Add Experience
-      </button>
-    </div>
-  );
-}
-```
-
-### 2. Form State Management and Persistence
-
-For persisting form data between sessions:
-
-```tsx
-// src/hooks/usePersistedForm.ts
-import { useState, useEffect } from "react";
-import { UseFormReturn } from "react-hook-form";
-
-export function usePersistedForm<T>(form: UseFormReturn<T>, formId: string) {
-  const [isRestored, setIsRestored] = useState(false);
-
-  // Save form data on changes
-  useEffect(() => {
-    if (!isRestored) return;
-
-    const subscription = form.watch((values) => {
-      localStorage.setItem(`form_${formId}`, JSON.stringify(values));
-    });
-
-    return () => subscription.unsubscribe();
-  }, [form, formId, isRestored]);
-
-  // Restore form data on mount
-  useEffect(() => {
-    const savedValues = localStorage.getItem(`form_${formId}`);
-
-    if (savedValues) {
-      try {
-        form.reset(JSON.parse(savedValues));
-      } catch (e) {
-        console.error("Could not restore form values", e);
-      }
-    }
-
-    setIsRestored(true);
-  }, [form, formId]);
-
-  // Clear form data
-  const clearSavedForm = () => {
-    localStorage.removeItem(`form_${formId}`);
-  };
-
-  return { isRestored, clearSavedForm };
-}
-```
-
-### 1. Enhanced Form Wrapper with Customization
-
-```tsx
-// src/components/forms/FormWrapper.tsx
-import { ReactNode } from "react";
-import {
-  useForm,
-  FormProvider,
-  UseFormProps,
-  FieldValues,
-} from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { twMerge } from "tailwind-merge"; // For handling Tailwind class merging
-
-interface FormWrapperStyleProps {
-  rootClassName?: string;
-  formClassName?: string;
-  containerClassName?: string;
-  loadingClassName?: string;
-  errorClassName?: string;
-  successClassName?: string;
-}
-
-// Add validation mode types
-type ValidationMode = "onBlur" | "onChange" | "onSubmit" | "onTouched" | "all";
-type ValidationTrigger = "onBlur" | "onChange" | "onSubmit" | "onTouched";
-
-interface FormValidationOptions {
-  mode?: ValidationMode;
-  reValidateMode?: ValidationMode;
-  validationTrigger?: ValidationTrigger[];
-  shouldUnregister?: boolean;
-  criteriaMode?: "firstError" | "all";
-  shouldFocusError?: boolean;
-  delayError?: number;
-}
-
-interface FormWrapperProps<T extends FieldValues>
-  extends FormWrapperStyleProps {
-  schema: z.ZodType<T>;
-  onSubmit: (data: T) => void | Promise<void>;
-  children: ReactNode;
-  options?: Omit<UseFormProps<T>, "resolver">;
-  // Validation options
-  validation?: FormValidationOptions;
-  // Additional customization props
-  loadingComponent?: ReactNode;
-  errorComponent?: ReactNode;
-  successComponent?: ReactNode;
-  beforeForm?: ReactNode;
-  afterForm?: ReactNode;
-  formAttributes?: React.FormHTMLAttributes<HTMLFormElement>;
-  // Form state handlers
-  onFormStateChange?: (state: {
-    isSubmitting: boolean;
-    isValid: boolean;
-    isDirty: boolean;
-    isValidating: boolean;
-  }) => void;
-  // Custom validation
-  customValidation?: (data: T) => Promise<void> | void;
-  // Error handling
-  onError?: (error: unknown) => void;
-}
-
-export function FormWrapper<T extends FieldValues>({
-  schema,
-  onSubmit,
-  children,
-  options,
-  validation = {
-    mode: "onBlur",
-    reValidateMode: "onChange",
-    criteriaMode: "firstError",
-    shouldFocusError: true,
-    delayError: 0,
-  },
-  // Style props
-  rootClassName,
-  formClassName,
-  containerClassName,
-  loadingClassName,
-  errorClassName,
-  successClassName,
-  // Custom components
-  loadingComponent,
-  errorComponent,
-  successComponent,
-  beforeForm,
-  afterForm,
-  formAttributes,
-  // Handlers
-  onFormStateChange,
-  customValidation,
-  onError,
-}: FormWrapperProps<T>) {
-  const [formState, setFormState] = useState({
-    isSubmitting: false,
-    isValid: false,
-    isDirty: false,
-    isValidating: false,
-    error: null as string | null,
-    success: false,
-  });
-
-  // Create validation triggers based on configuration
-  const createValidationTriggers = (triggers?: ValidationTrigger[]) => {
-    if (!triggers) return {};
-
-    return triggers.reduce(
-      (acc, trigger) => {
-        acc[trigger] = async () => {
-          try {
-            await methods.trigger();
-          } catch (error) {
-            console.error(`Validation failed on ${trigger}:`, error);
+      <FormWrapper
+        schema={registrationSchema}
+        onSubmit={handleSubmit}
+        formClassName={FORM_STYLES.CONTAINER}
+        options={{
+          defaultValues: {
+            firstName: "",
+            lastName: "",
+            email: "",
+            password: "",
+            country: "",
+            agreeToTerms: false
           }
-        };
-        return acc;
-      },
-      {} as Record<string, () => Promise<void>>
-    );
-  };
-
-  const methods = useForm<T>({
-    resolver: zodResolver(schema),
-    mode: validation.mode,
-    reValidateMode: validation.reValidateMode,
-    criteriaMode: validation.criteriaMode,
-    shouldFocusError: validation.shouldFocusError,
-    shouldUnregister: validation.shouldUnregister,
-    delayError: validation.delayError,
-    ...options,
-  });
-
-  // Watch form state changes with enhanced state tracking
-  useEffect(() => {
-    const subscription = methods.watch(() => {
-      const formState = methods.formState;
-      const state = {
-        isSubmitting: formState.isSubmitting,
-        isValid: formState.isValid,
-        isDirty: formState.isDirty,
-        isValidating: formState.isValidating,
-      };
-      onFormStateChange?.(state);
-
-      setFormState((prev) => ({
-        ...prev,
-        isValid: formState.isValid,
-        isDirty: formState.isDirty,
-        isValidating: formState.isValidating,
-      }));
-    });
-
-    return () => subscription.unsubscribe();
-  }, [methods, onFormStateChange]);
-
-  // Enhanced submit handler with better error handling
-  const handleSubmit = async (data: T) => {
-    try {
-      setFormState((prev) => ({
-        ...prev,
-        isSubmitting: true,
-        error: null,
-        isValidating: true,
-      }));
-
-      // Run schema validation explicitly
-      await schema.parseAsync(data);
-
-      // Run custom validation if provided
-      if (customValidation) {
-        await customValidation(data);
-      }
-
-      await onSubmit(data);
-
-      setFormState((prev) => ({
-        ...prev,
-        success: true,
-        isValidating: false,
-      }));
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Form submission failed";
-
-      setFormState((prev) => ({
-        ...prev,
-        error: errorMessage,
-        isValidating: false,
-      }));
-
-      onError?.(error);
-    } finally {
-      setFormState((prev) => ({
-        ...prev,
-        isSubmitting: false,
-      }));
-    }
-  };
-
-  const rootClasses = twMerge(
-    "form-wrapper",
-    formState.isSubmitting && "submitting",
-    formState.error && "has-error",
-    formState.success && "success",
-    rootClassName
-  );
-
-  const formClasses = twMerge(
-    "form",
-    formState.isSubmitting && "opacity-50 pointer-events-none",
-    formClassName
-  );
-
-  return (
-    <div className={rootClasses}>
-      {beforeForm}
-
-      <FormProvider {...methods}>
-        <form
-          onSubmit={methods.handleSubmit(handleSubmit)}
-          className={formClasses}
-          noValidate
-          {...formAttributes}
-        >
-          <div className={twMerge("form-container", containerClassName)}>
-            {children}
-          </div>
-
-          {formState.isSubmitting && (
-            <div className={twMerge("form-loading", loadingClassName)}>
-              {loadingComponent || <span>Submitting...</span>}
-            </div>
-          )}
-
-          {formState.error && (
-            <div className={twMerge("form-error", errorClassName)}>
-              {errorComponent || <span>{formState.error}</span>}
-            </div>
-          )}
-
-          {formState.success && successComponent && (
-            <div className={twMerge("form-success", successClassName)}>
-              {successComponent}
-            </div>
-          )}
-        </form>
-      </FormProvider>
-
-      {afterForm}
-    </div>
-  );
-}
-```
-
-### 2. Enhanced Form Field with Advanced Customization
-
-```tsx
-// src/components/forms/FormField.tsx
-import { useFormContext, FieldPath, FieldValues } from "react-hook-form";
-import { twMerge } from "tailwind-merge";
-
-interface FormFieldStyleProps {
-  containerClassName?: string;
-  labelClassName?: string;
-  inputClassName?: string;
-  errorClassName?: string;
-  helperTextClassName?: string;
-  requiredClassName?: string;
-}
-
-interface FormFieldProps<T extends FieldValues> extends FormFieldStyleProps {
-  name: FieldPath<T>;
-  label: string;
-  type?: string;
-  placeholder?: string;
-  required?: boolean;
-  // Additional customization
-  helperText?: string;
-  leftAdornment?: ReactNode;
-  rightAdornment?: ReactNode;
-  inputProps?: InputHTMLAttributes<HTMLInputElement>;
-  labelProps?: LabelHTMLAttributes<HTMLLabelElement>;
-  // Custom components
-  customInput?: ReactNode;
-  customLabel?: ReactNode;
-  customError?: ReactNode;
-  // Validation and transformation
-  transform?: (value: any) => any;
-  validate?: (value: any) => boolean | string | Promise<boolean | string>;
-  // Event handlers
-  onValueChange?: (value: any) => void;
-}
-
-export function FormField<T extends FieldValues>({
-  name,
-  label,
-  type = "text",
-  placeholder,
-  required = false,
-  // Style props
-  containerClassName,
-  labelClassName,
-  inputClassName,
-  errorClassName,
-  helperTextClassName,
-  requiredClassName,
-  // Additional props
-  helperText,
-  leftAdornment,
-  rightAdornment,
-  inputProps,
-  labelProps,
-  // Custom components
-  customInput,
-  customLabel,
-  customError,
-  // Validation and transformation
-  transform,
-  validate,
-  onValueChange,
-}: FormFieldProps<T>) {
-  const {
-    register,
-    formState: { errors },
-    watch,
-  } = useFormContext<T>();
-
-  const error = errors[name];
-  const errorMessage = error?.message as string | undefined;
-  const value = watch(name);
-
-  // Handle value changes
-  useEffect(() => {
-    if (onValueChange) {
-      onValueChange(value);
-    }
-  }, [value, onValueChange]);
-
-  const containerClasses = twMerge(
-    "form-field",
-    error && "has-error",
-    containerClassName
-  );
-
-  const labelClasses = twMerge(
-    "form-field-label",
-    error && "text-error",
-    labelClassName
-  );
-
-  const inputClasses = twMerge(
-    "form-field-input",
-    error && "border-error",
-    inputClassName
-  );
-
-  const errorClasses = twMerge("form-field-error", errorClassName);
-
-  const helperTextClasses = twMerge(
-    "form-field-helper-text",
-    helperTextClassName
-  );
-
-  const requiredIndicatorClasses = twMerge(
-    "form-field-required",
-    requiredClassName
-  );
-
-  const registerOptions = {
-    ...register(name, {
-      required: required && "This field is required",
-      validate: validate,
-      setValueAs: transform,
-    }),
-    ...inputProps,
-  };
-
-  return (
-    <div className={containerClasses}>
-      {/* Label */}
-      {customLabel || (
-        <label htmlFor={name} className={labelClasses} {...labelProps}>
-          {label}
-          {required && <span className={requiredIndicatorClasses}>*</span>}
-        </label>
-      )}
-
-      {/* Input Field */}
-      <div className="form-field-input-wrapper">
-        {leftAdornment && (
-          <div className="form-field-adornment-left">{leftAdornment}</div>
-        )}
-
-        {customInput || (
-          <input
-            id={name}
-            type={type}
-            placeholder={placeholder}
-            className={inputClasses}
-            aria-invalid={!!error}
-            aria-describedby={
-              errorMessage
-                ? `${name}-error`
-                : helperText
-                  ? `${name}-helper`
-                  : undefined
-            }
-            {...registerOptions}
-          />
-        )}
-
-        {rightAdornment && (
-          <div className="form-field-adornment-right">{rightAdornment}</div>
-        )}
-      </div>
-
-      {/* Helper Text */}
-      {helperText && !errorMessage && (
-        <p id={`${name}-helper`} className={helperTextClasses}>
-          {helperText}
-        </p>
-      )}
-
-      {/* Error Message */}
-      {errorMessage &&
-        (customError || (
-          <p id={`${name}-error`} className={errorClasses}>
-            {errorMessage}
-          </p>
-        ))}
-    </div>
-  );
-}
-```
-
-### Usage Example with Validation Options
-
-```tsx
-function RegistrationForm() {
-  return (
-    <FormWrapper
-      schema={userFormSchema}
-      onSubmit={handleSubmit}
-      validation={{
-        mode: "onChange", // Validate on every change
-        reValidateMode: "onBlur", // Re-validate when field loses focus
-        validationTrigger: ["onChange", "onBlur"], // Additional triggers
-        criteriaMode: "all", // Show all validation errors
-        shouldFocusError: true, // Focus first error field
-        delayError: 500, // Delay error display by 500ms
-      }}
-      onFormStateChange={(state) => {
-        // Track detailed form state
-        console.log("Form state:", state);
-      }}
-      onError={(error) => {
-        // Handle validation/submission errors
-        console.error("Form error:", error);
-      }}
-    >
-      <FormField
-        name="email"
-        label="Email"
-        type="email"
-        required
-        // Field will inherit form-level validation behavior
-        // But can override with its own validation props
-        validate={async (value) => {
-          const isValid = await validateEmail(value);
-          return isValid || "Invalid email format";
         }}
-      />
-      {/* Other fields */}
-    </FormWrapper>
+      >
+        {/* Name Fields */}
+        <div className={FORM_STYLES.GRID_TWO_COLS}>
+          <FormField<RegistrationData>
+            name="firstName"
+            label="First Name"
+            required
+            containerClassName={FORM_STYLES.FIELD_CONTAINER}
+            labelClassName={FORM_STYLES.LABEL}
+            inputClassName={FORM_STYLES.INPUT_BASE}
+            errorClassName={FORM_STYLES.ERROR_TEXT}
+          />
+
+          <FormField<RegistrationData>
+            name="lastName"
+            label="Last Name"
+            required
+            containerClassName={FORM_STYLES.FIELD_CONTAINER}
+            labelClassName={FORM_STYLES.LABEL}
+            inputClassName={FORM_STYLES.INPUT_BASE}
+            errorClassName={FORM_STYLES.ERROR_TEXT}
+          />
+        </div>
+
+        {/* Email */}
+        <FormField<RegistrationData>
+          name="email"
+          label="Email Address"
+          type="email"
+          required
+          containerClassName={FORM_STYLES.FIELD_CONTAINER}
+          labelClassName={FORM_STYLES.LABEL}
+          inputClassName={FORM_STYLES.INPUT_BASE}
+          errorClassName={FORM_STYLES.ERROR_TEXT}
+        />
+
+        {/* Password */}
+        <FormField<RegistrationData>
+          name="password"
+          label="Password"
+          type="password"
+          required
+          containerClassName={FORM_STYLES.FIELD_CONTAINER}
+          labelClassName={FORM_STYLES.LABEL}
+          inputClassName={FORM_STYLES.INPUT_BASE}
+          errorClassName={FORM_STYLES.ERROR_TEXT}
+          helperText="Must be at least 8 characters"
+          helperTextClassName={FORM_STYLES.HELPER_TEXT}
+        />
+
+        {/* Country */}
+        <FormField<RegistrationData>
+          name="country"
+          label="Country"
+          required
+          containerClassName={FORM_STYLES.FIELD_CONTAINER}
+          labelClassName={FORM_STYLES.LABEL}
+          errorClassName={FORM_STYLES.ERROR_TEXT}
+          customInput={
+            <Select
+              name="country"
+              options={COUNTRIES}
+              placeholder="Select your country"
+            />
+          }
+        />
+
+        {/* Terms Agreement */}
+        <FormField<RegistrationData>
+          name="agreeToTerms"
+          label="I agree to the Terms of Service and Privacy Policy"
+          type="checkbox"
+          required
+          containerClassName={FORM_STYLES.CHECKBOX_CONTAINER}
+          inputClassName={FORM_STYLES.CHECKBOX}
+          errorClassName={FORM_STYLES.ERROR_TEXT}
+        />
+
+        {/* Submit Button */}
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className={FORM_STYLES.BUTTON_PRIMARY}
+        >
+          {isSubmitting ? "Creating Account..." : "Create Account"}
+        </button>
+      </FormWrapper>
+    </div>
   );
 }
 ```
 
-## Validation Modes Explained
+---
 
-1. **Available Modes**:
-   - `onBlur`: Validate when field loses focus
-   - `onChange`: Validate on every change
-   - `onSubmit`: Validate only on form submission
-   - `onTouched`: Validate after field is touched
-   - `all`: Validate on all events
+## API Reference
 
-2. **Validation Triggers**:
-   - Configure multiple validation events
-   - Mix and match different triggers
-   - Control validation timing
-   - Handle async validation efficiently
+### Utilities
 
-3. **Error Handling**:
-   - Configurable error display delay
-   - Focus management for errors
-   - Comprehensive error state tracking
-   - Custom error handling callbacks
+#### `buildClasses(baseClass, conditions, customClass)`
 
-4. **Performance Considerations**:
-   - Debounced validation for onChange mode
-   - Optimized re-render cycles
-   - Efficient validation state tracking
-   - Proper cleanup of subscriptions
+Utility for building conditional CSS classes:
 
-5. **Best Practices**:
-   - Choose appropriate validation mode based on UX requirements
-   - Consider performance implications of each mode
-   - Implement proper error handling
-   - Use validation triggers judiciously
+```typescript
+import { buildClasses } from "@/lib/forms";
 
-## Conclusion
+const className = buildClasses(
+  "base-class",
+  {
+    "error-class": hasError,
+    "disabled-class": isDisabled,
+  },
+  "custom-class"
+);
+```
 
-This form handling approach provides a robust foundation for creating forms in Next.js projects. By combining React Hook Form for state management and Zod for validation, we get excellent developer experience, strong type safety, and good performance.
+#### `createZodResolver(schema)`
 
-Junior developers should be able to quickly get started by following the patterns provided here, adding new form fields and validation rules as needed for their specific use cases.
+Creates a React Hook Form resolver from a Zod schema:
 
-/\*\*
+```typescript
+import { createZodResolver } from "@/lib/forms";
 
-- Available validation modes
-  \*/
-  export const VALIDATION_MODES = {
-  ON_BLUR: "onBlur",
-  ON_CHANGE: "onChange",
-  ON_SUBMIT: "onSubmit",
-  ON_TOUCHED: "onTouched",
-  ALL: "all",
-  } as const;
+const resolver = createZodResolver(mySchema);
+```
 
-export type ValidationMode = typeof VALIDATION_MODES[keyof typeof VALIDATION_MODES];
+#### `shouldDisplayError(errorMessage, isTouched, isSubmitted, isSuccessful)`
 
-interface FormValidationConfig {
-/\*\*
+Determines when to show field errors:
 
-- When to trigger validation
-- @default "onBlur"
-  \*/
-  mode?: ValidationMode;
-  /\*\*
-- When to trigger revalidation
-- @default "onChange"
-  \*/
-  reValidateMode?: ValidationMode;
-  /\*\*
-- Whether to validate on mount
-- @default false
-  \*/
-  validateOnMount?: boolean;
-  /\*\*
-- Delay in ms before showing validation errors
-- @default 0
-  \*/
-  validationDelay?: number;
-  /\*\*
-- Whether to show all errors or just the first one
-- @default "firstError"
-  \*/
-  criteriaMode?: "firstError" | "all";
-  }
+```typescript
+import { shouldDisplayError } from "@/lib/forms";
 
-interface FormWrapperProps<T extends FieldValues> {
-// ... existing props ...
+const showError = shouldDisplayError(
+  error?.message,
+  fieldTouched,
+  formSubmitted,
+  submitSuccessful
+);
+```
 
-/\*\*
+### Form State
 
-- Validation configuration
-  \*/
-  validationConfig?: FormValidationConfig;
-  }
+The form provides access to these state values:
 
-export function FormWrapper<T extends FieldValues>({
-schema,
-onSubmit,
-children,
-validationConfig = {
-mode: VALIDATION_MODES.ON_BLUR,
-reValidateMode: VALIDATION_MODES.ON_CHANGE,
-validateOnMount: false,
-validationDelay: 0,
-criteriaMode: "firstError",
-},
-// ... other props
-}: FormWrapperProps<T>) {
-const methods = useForm<T>({
-resolver: zodResolver(schema),
-mode: validationConfig.mode,
-reValidateMode: validationConfig.reValidateMode,
-criteriaMode: validationConfig.criteriaMode,
-...options,
-});
-
-// Validate on mount if configured
-useEffect(() => {
-if (validationConfig.validateOnMount) {
-methods.trigger();
-}
-}, [methods, validationConfig.validateOnMount]);
-
-// Handle delayed validation
-useEffect(() => {
-if (validationConfig.validationDelay > 0) {
-const timer = setTimeout(() => {
-methods.trigger();
-}, validationConfig.validationDelay);
-
-      return () => clearTimeout(timer);
-    }
-
-}, [methods, validationConfig.validationDelay]);
-
-// ... rest of the component implementation
-}
-
-## Usage Examples
-
-### 1. Basic Usage with Default Validation (onBlur)
-
-```tsx
-function SimpleForm() {
-  return (
-    <FormWrapper schema={userSchema} onSubmit={handleSubmit}>
-      <FormField name="email" label="Email" />
-      <FormField name="password" label="Password" type="password" />
-    </FormWrapper>
-  );
+```typescript
+interface FormState {
+  isSubmitting: boolean; // Form is being submitted
+  isValid: boolean; // All fields are valid
+  isDirty: boolean; // Form has been modified
+  isValidating: boolean; // Validation in progress
+  error: string | null; // Submission error
+  success: boolean; // Submission succeeded
 }
 ```
 
-### 2. Real-time Validation (onChange)
+### Validation Modes
 
-```tsx
-function RealtimeValidationForm() {
-  return (
-    <FormWrapper
-      schema={userSchema}
-      onSubmit={handleSubmit}
-      validationConfig={{
-        mode: VALIDATION_MODES.ON_CHANGE,
-        reValidateMode: VALIDATION_MODES.ON_CHANGE,
-        validateOnMount: true, // Validate fields immediately
-        criteriaMode: "all", // Show all errors
-      }}
-    >
-      <FormField name="email" label="Email" />
-      <FormField name="password" label="Password" type="password" />
-    </FormWrapper>
-  );
-}
+```typescript
+type ValidationMode =
+  | "onBlur" // Validate when field loses focus
+  | "onChange" // Validate on every change
+  | "onSubmit" // Validate only on submit
+  | "onTouched" // Validate after field is touched
+  | "all"; // Validate on all events
 ```
 
-### 3. Submit-only Validation
+---
 
-```tsx
-function SubmitOnlyForm() {
-  return (
-    <FormWrapper
-      schema={userSchema}
-      onSubmit={handleSubmit}
-      validationConfig={{
-        mode: VALIDATION_MODES.ON_SUBMIT,
-        reValidateMode: VALIDATION_MODES.ON_SUBMIT,
-      }}
-    >
-      <FormField name="email" label="Email" />
-      <FormField name="password" label="Password" type="password" />
-    </FormWrapper>
-  );
-}
-```
+## Troubleshooting
 
-### 4. Delayed Validation for Better UX
+### Common Issues
 
-```tsx
-function DelayedValidationForm() {
-  return (
-    <FormWrapper
-      schema={userSchema}
-      onSubmit={handleSubmit}
-      validationConfig={{
-        mode: VALIDATION_MODES.ON_CHANGE,
-        validationDelay: 500, // Wait 500ms before showing errors
-        criteriaMode: "all",
-      }}
-    >
-      <FormField name="email" label="Email" />
-      <FormField name="password" label="Password" type="password" />
-    </FormWrapper>
-  );
-}
-```
+1. **TypeScript Errors**: Make sure your field names match your schema exactly
+2. **Validation Not Working**: Check that your schema is properly defined
+3. **Styling Issues**: Use the provided style constants for consistency
+4. **Form Not Submitting**: Ensure your submit handler is async if making API calls
 
-### 5. Mixed Validation Strategy
+### Debug Tips
 
-```tsx
-function MixedValidationForm() {
-  return (
-    <FormWrapper
-      schema={userSchema}
-      onSubmit={handleSubmit}
-      validationConfig={{
-        mode: VALIDATION_MODES.ON_BLUR, // Validate on blur by default
-        reValidateMode: VALIDATION_MODES.ON_CHANGE, // But revalidate on change
-        validateOnMount: false,
-        validationDelay: 200,
-      }}
-    >
-      {/* This field follows the form's validation config */}
-      <FormField name="email" label="Email" />
+1. Use `console.log` in your submit handler to check form data
+2. Check the browser's Network tab for API request errors
+3. Use React DevTools to inspect form state
+4. Validate your Zod schema separately if needed
 
-      {/* This field has its own validation behavior */}
-      <FormField
-        name="password"
-        label="Password"
-        type="password"
-        validateOn="onChange" // Override form-level validation mode
-      />
-    </FormWrapper>
-  );
-}
-```
+---
 
-## Validation Modes Explained
-
-1. **onBlur** (Default):
-   - Validates when a field loses focus
-   - Good balance between UX and validation
-   - Recommended for most forms
-
-2. **onChange**:
-   - Validates on every keystroke
-   - Best for immediate feedback
-   - Consider using with `validationDelay` for better UX
-
-3. **onSubmit**:
-   - Validates only when form is submitted
-   - Less intrusive user experience
-   - Good for simple forms
-
-4. **onTouched**:
-   - Validates after field is interacted with
-   - Similar to onBlur but persists
-   - Good for complex forms
-
-5. **all**:
-   - Combines all validation modes
-   - Most strict validation
-   - Use sparingly, can be overwhelming
-
-## Best Practices
-
-1. **Choose the Right Mode**:
-
-   ```tsx
-   // For login forms: validate on submit
-   <FormWrapper
-     validationConfig={{
-       mode: VALIDATION_MODES.ON_SUBMIT
-     }}
-   />
-
-   // For registration forms: validate on blur
-   <FormWrapper
-     validationConfig={{
-       mode: VALIDATION_MODES.ON_BLUR
-     }}
-   />
-
-   // For search forms: validate on change with delay
-   <FormWrapper
-     validationConfig={{
-       mode: VALIDATION_MODES.ON_CHANGE,
-       validationDelay: 300
-     }}
-   />
-   ```
-
-2. **Performance Considerations**:
-   - Use `validationDelay` with onChange validation
-   - Avoid validateOnMount for large forms
-   - Consider criteriaMode impact on performance
-
-3. **UX Recommendations**:
-
-   ```tsx
-   // Good UX for complex forms
-   <FormWrapper
-     validationConfig={{
-       mode: VALIDATION_MODES.ON_BLUR,
-       reValidateMode: VALIDATION_MODES.ON_CHANGE,
-       validationDelay: 200,
-       criteriaMode: "firstError",
-     }}
-   />
-   ```
-
-4. **Field-Level Override**:
-   ```tsx
-   <FormField
-     name="email"
-     validateOn="onChange"
-     validationDelay={300}
-     showAllErrors={true}
-   />
-   ```
+This documentation covers the essential usage patterns for the form handling library. For more complex use cases, refer to the demo form in `/src/app/[locale]/form/page.tsx` which demonstrates all features in action.

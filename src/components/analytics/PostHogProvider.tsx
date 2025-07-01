@@ -2,7 +2,7 @@
 
 import posthog from "posthog-js";
 import { PostHogProvider as PHProvider } from "posthog-js/react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { clientConfig } from "@/lib/config";
 
@@ -25,6 +25,7 @@ interface PostHogProviderProps {
  * - Graceful degradation when PostHog is not configured
  * - Manual pageview control for custom tracking logic
  * - Automatic page leave tracking
+ * - Prevents hydration mismatch by using client-side only checks
  *
  * Configuration Required:
  * - clientConfig.analytics.posthog.key: PostHog project API key
@@ -34,7 +35,12 @@ interface PostHogProviderProps {
 export function PostHogProvider({
   children,
 }: PostHogProviderProps): React.JSX.Element {
+  const [isClient, setIsClient] = useState(false);
+
   useEffect(() => {
+    // Mark as client-side to prevent hydration mismatch
+    setIsClient(true);
+
     // Only initialize if PostHog key is provided and analytics is enabled
     if (
       clientConfig.analytics.posthog.key &&
@@ -50,17 +56,15 @@ export function PostHogProvider({
     }
   }, []);
 
-  // Return children without provider if PostHog is not configured
-  if (
-    !clientConfig.analytics.posthog.key ||
-    !clientConfig.analytics.posthog.enabled
-  ) {
-    return <>{children}</>;
-  }
-
+  // Always return children wrapped in the provider to avoid hydration mismatch
+  // The provider will simply not track anything if analytics is disabled
   return (
     <PHProvider client={posthog}>
-      <SuspendedPostHogPageView />
+      {isClient &&
+      clientConfig.analytics.posthog.key &&
+      clientConfig.analytics.posthog.enabled ? (
+        <SuspendedPostHogPageView />
+      ) : null}
       {children}
     </PHProvider>
   );

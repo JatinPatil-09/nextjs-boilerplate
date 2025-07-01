@@ -132,19 +132,19 @@ export const env = createEnv({
 
     // Feature Flags
     NEXT_PUBLIC_ENABLE_ANALYTICS: z
-      .string()
-      .transform((val) => val === "true")
+      .enum(["true", "false"])
       .default("false")
+      .transform((val) => val === "true")
       .describe("Enable analytics tracking"),
     NEXT_PUBLIC_ENABLE_ERROR_REPORTING: z
-      .string()
-      .transform((val) => val === "true")
+      .enum(["true", "false"])
       .default("false")
+      .transform((val) => val === "true")
       .describe("Enable error reporting to Sentry"),
     NEXT_PUBLIC_MAINTENANCE_MODE: z
-      .string()
-      .transform((val) => val === "true")
+      .enum(["true", "false"])
       .default("false")
+      .transform((val) => val === "true")
       .describe("Enable maintenance mode"),
 
     // CDN & Assets

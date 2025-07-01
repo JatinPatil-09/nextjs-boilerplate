@@ -1,7 +1,9 @@
 "use client";
 
 import { usePostHog } from "posthog-js/react";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+import { clientConfig } from "@/lib/config";
 
 /**
  * Analytics Event Properties
@@ -35,6 +37,7 @@ export interface UseAnalyticsReturn {
   readonly reset: () => void;
   readonly setUserProperties: (properties: AnalyticsUserProperties) => void;
   readonly isEnabled: boolean;
+  readonly isReady: boolean;
 }
 
 /**
@@ -46,22 +49,37 @@ export interface UseAnalyticsReturn {
  * - Null safety checks for PostHog client
  * - Memoized callback functions for performance
  * - Status indicator for analytics availability
+ * - Client-side only execution to prevent hydration issues
+ * - Respects the NEXT_PUBLIC_ENABLE_ANALYTICS environment variable
  *
  * @returns Analytics operations and status
  *
  * @example
  * ```tsx
- * const { track, identify, isEnabled } = useAnalytics();
+ * const { track, identify, isEnabled, isReady } = useAnalytics();
  *
- * // Track an event
- * track('button_clicked', { button_name: 'cta', page: 'home' });
+ * // Check if analytics is ready before using
+ * if (isReady && isEnabled) {
+ *   // Track an event
+ *   track('button_clicked', { button_name: 'cta', page: 'home' });
  *
- * // Identify a user
- * identify('user-123', { email: 'user@example.com', plan: 'premium' });
+ *   // Identify a user
+ *   identify('user-123', { email: 'user@example.com', plan: 'premium' });
+ * }
  * ```
  */
 export function useAnalytics(): UseAnalyticsReturn {
   const posthog = usePostHog();
+  const [isClient, setIsClient] = useState(false);
+
+  // Mark as client-side to prevent hydration issues
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Check if analytics is enabled from configuration (only on client)
+  const analyticsEnabled = isClient && clientConfig.analytics.posthog.enabled;
+  const hasValidKey = isClient && Boolean(clientConfig.analytics.posthog.key);
 
   /**
    * Track Custom Events
@@ -69,11 +87,11 @@ export function useAnalytics(): UseAnalyticsReturn {
    */
   const track = useCallback(
     (eventName: string, properties?: AnalyticsEventProperties): void => {
-      if (posthog) {
+      if (posthog && analyticsEnabled && hasValidKey) {
         posthog.capture(eventName, properties);
       }
     },
-    [posthog]
+    [posthog, analyticsEnabled, hasValidKey]
   );
 
   /**
@@ -82,11 +100,11 @@ export function useAnalytics(): UseAnalyticsReturn {
    */
   const identify = useCallback(
     (userId: string, properties?: AnalyticsUserProperties): void => {
-      if (posthog) {
+      if (posthog && analyticsEnabled && hasValidKey) {
         posthog.identify(userId, properties);
       }
     },
-    [posthog]
+    [posthog, analyticsEnabled, hasValidKey]
   );
 
   /**
@@ -94,10 +112,10 @@ export function useAnalytics(): UseAnalyticsReturn {
    * Clears the current user identification and starts a new session
    */
   const reset = useCallback((): void => {
-    if (posthog) {
+    if (posthog && analyticsEnabled && hasValidKey) {
       posthog.reset();
     }
-  }, [posthog]);
+  }, [posthog, analyticsEnabled, hasValidKey]);
 
   /**
    * Set User Properties
@@ -105,18 +123,27 @@ export function useAnalytics(): UseAnalyticsReturn {
    */
   const setUserProperties = useCallback(
     (properties: AnalyticsUserProperties): void => {
-      if (posthog) {
+      if (posthog && analyticsEnabled && hasValidKey) {
         posthog.setPersonProperties(properties);
       }
     },
-    [posthog]
+    [posthog, analyticsEnabled, hasValidKey]
   );
 
   /**
    * Analytics Status
    * Indicates whether analytics is available and enabled
    */
-  const isEnabled = useMemo((): boolean => Boolean(posthog), [posthog]);
+  const isEnabled = useMemo(
+    (): boolean => Boolean(posthog) && analyticsEnabled && hasValidKey,
+    [posthog, analyticsEnabled, hasValidKey]
+  );
+
+  /**
+   * Ready Status
+   * Indicates whether the hook has completed client-side initialization
+   */
+  const isReady = useMemo((): boolean => isClient, [isClient]);
 
   return {
     track,
@@ -124,5 +151,6 @@ export function useAnalytics(): UseAnalyticsReturn {
     reset,
     setUserProperties,
     isEnabled,
+    isReady,
   };
 }
